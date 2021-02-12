@@ -1,0 +1,63 @@
+{{- $tlsCrt := "" }}
+{{- $tlsKey := "" }}
+{{- $caCrt := "" }}
+{{- if .Values.webhook.certificate.generate }}
+{{- $ca := genCA "svc-cat-ca" 3650 }}
+{{- $svcName := include "translations-refresher.fullname" . }}
+{{- $cn := printf "%s.%s.svc" $svcName .Release.Namespace }}
+{{- $altName1 := printf "%s.cluster.local" $cn }}
+{{- $altName2 := printf "%s" $cn }}
+{{- $server := genSignedCert $cn nil (concat (list $altName1 $altName2) .Values.webhook.certificate.extraAltNames) 365 $ca }}
+{{- $tlsCrt = b64enc $server.Cert }}
+{{- $tlsKey = b64enc $server.Key }}
+{{- $caCrt =  b64enc $ca.Cert }}
+{{- end }}
+
+{{- if $tlsCrt }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "translations-refresher.fullname" . }}-webhook-tls
+  namespace: {{ .Release.Namespace }}
+data:
+  tls.crt: {{ $tlsCrt }}
+  tls.key: {{ $tlsKey }}
+  ca.crt:  {{ $caCrt }}
+{{- end }}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ template "translations-refresher.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+webhooks:
+- name: deployments.{{ template "translations-refresher.name" . }}.admission.etsglobal.org
+  admissionReviewVersions: ["v1beta1"]
+  {{- if .Values.webhook.timeoutSeconds }}
+  timeoutSeconds: {{ .Values.webhook.timeoutSeconds }}
+  {{- end }}
+  clientConfig:
+    service:
+      namespace: {{ .Release.Namespace }}
+      name: {{ template "translations-refresher.fullname" . }}
+      port: {{ .Values.service.webhookPort }}
+      path: /deployments
+    caBundle: {{ $caCrt }}
+  rules:
+  - apiGroups:
+    - "*"
+    apiVersions:
+    - "*"
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - deployments
+  failurePolicy: {{ .Values.webhook.failurePolicy }}
+  objectSelector:
+    matchExpressions:
+    - key: translations.etsglobal.org/refresh
+      operator: In
+      values:
+      - "true"
+  sideEffects: {{ .Values.webhook.apiSideEffectValue }}

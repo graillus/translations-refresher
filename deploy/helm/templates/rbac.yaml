@@ -1,0 +1,41 @@
+{{- if .Values.serviceAccount.create -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "translations-refresher.serviceAccountName" . }}
+  labels:
+    {{- include "translations-refresher.labels" . | nindent 4 }}
+  {{- with .Values.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+    name: {{ include "translations-refresher.serviceAccountName" . }}
+rules:
+- apiGroups:
+  - ""
+  - "apps"
+  resources:
+  - "pods"
+  - "deployments"
+  verbs:
+  - "get"
+  - "list"
+  - "patch"
+  - "update"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+    name: {{ include "translations-refresher.serviceAccountName" . }}
+subjects:
+    - kind: ServiceAccount
+      name: {{ include "translations-refresher.serviceAccountName" . }}
+roleRef:
+    kind: Role
+    name: {{ include "translations-refresher.serviceAccountName" . }}
+    apiGroup: rbac.authorization.k8s.io

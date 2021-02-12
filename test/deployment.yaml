@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-app
+  labels:
+    app: test-app
+    translations.etsglobal.org/refresh: "true"
+  annotations:
+    translations.etsglobal.org/domains: "emails,catalog"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-app
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: test-app
+    spec:
+      containers:
+      - image: nginx:latest
+        name: nginx
