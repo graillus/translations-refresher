@@ -31,21 +31,22 @@ func main() {
 
 	// Refresh duration flag
 	refreshperiod = flag.String("period", "2m", "Duration between translations refreshes")
+
+	flag.Parse()
+
 	duration, err := time.ParseDuration(*refreshperiod)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "refresh-period flag cannot be parsed: it is not a valid time.Duration expression")
 	}
-
-	flag.Parse()
 
 	config := &Config{
 		enableCron:    *enableCron,
 		enableWebhook: *enableWebhook,
 		kubeconfig:    *kubeconfig,
 		locoAPIKeys: map[string]string{
-			"catalog": os.Getenv("LOCO_API_KEY_CATALOG"),
-			//"documents": os.Getenv("LOCO_API_KEY_DOCUMENTS"),
-			"emails": os.Getenv("LOCO_API_KEY_EMAILS"),
+			"catalog":   os.Getenv("LOCO_API_KEY_CATALOG"),
+			"documents": os.Getenv("LOCO_API_KEY_DOCUMENTS"),
+			"emails":    os.Getenv("LOCO_API_KEY_EMAILS"),
 		},
 		tlsCertFile:       os.Getenv("TLS_CERT_FILE"),
 		tlsPrivateKeyFile: os.Getenv("TLS_PRIVATE_KEY_FILE"),
