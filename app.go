@@ -19,14 +19,12 @@ import (
 
 // Config holds the application configuration
 type Config struct {
-	enableCron        bool
 	enableWebhook     bool
 	kubeconfig        string
 	locoAPIKeys       map[string]string
+	schedule          string
 	tlsCertFile       string
 	tlsPrivateKeyFile string
-
-	cronSpec string
 }
 
 // App represents the main application object
@@ -74,9 +72,9 @@ func (app *App) Run() {
 	// compute translation hashes
 	hashes := app.translations.Fetch()
 
-	if app.config.enableCron {
+	if app.config.schedule != "" {
 		cron := cron.New()
-		_, _ = cron.AddFunc(app.config.cronSpec, func() {
+		_, _ = cron.AddFunc(app.config.schedule, func() {
 			// make sure we have the latest translations
 			app.translations.Fetch()
 			// update kubernetes deployments

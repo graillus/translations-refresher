@@ -12,11 +12,9 @@ import (
 
 func main() {
 	var (
-		kubeconfig    *string
-		enableCron    *bool
 		enableWebhook *bool
-
-		cronSpec *string
+		kubeconfig    *string
+		schedule      *string
 	)
 
 	// Kubeconfig flag
@@ -26,25 +24,22 @@ func main() {
 		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
 	}
 
-	// Boolean flags
-	enableCron = flag.Bool("cron", true, "Enable periodic translations refreshes in the backgound")
 	enableWebhook = flag.Bool("webhook", false, "Enable mutation webhook endpoint")
-
-	// Cron rule flag
-	cronSpec = flag.String("cronSpec", "*/2 * * * *", "Cron of the translations refreshes")
+	schedule = flag.String("schedule", "", "Cron schedule expression of the translations refreshes")
 
 	flag.Parse()
 
-	_, err := cron.ParseStandard(*cronSpec)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "cron flag cannot be parsed: %s", err)
+	if *schedule != "" {
+		_, err := cron.ParseStandard(*schedule)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "-schedule flag cannot be parsed: %s", err)
+		}
 	}
 
 	config := &Config{
-		enableCron:    *enableCron,
 		enableWebhook: *enableWebhook,
 		kubeconfig:    *kubeconfig,
-		cronSpec:      *cronSpec,
+		schedule:      *schedule,
 
 		locoAPIKeys: map[string]string{
 			"catalog":   os.Getenv("LOCO_API_KEY_CATALOG"),
