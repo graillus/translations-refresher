@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -14,6 +13,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"github.com/robfig/cron/v3"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
@@ -25,7 +25,8 @@ type Config struct {
 	locoAPIKeys       map[string]string
 	tlsCertFile       string
 	tlsPrivateKeyFile string
-	cronPeriod        time.Duration
+
+	cronSpec string
 }
 
 // App represents the main application object
@@ -74,13 +75,14 @@ func (app *App) Run() {
 	hashes := app.translations.Fetch()
 
 	if app.config.enableCron {
-		cron := NewCron(app.config.cronPeriod)
-		go cron.Run(func() {
+		cron := cron.New()
+		_, _ = cron.AddFunc(app.config.cronSpec, func() {
 			// make sure we have the latest translations
 			app.translations.Fetch()
 			// update kubernetes deployments
 			app.refresher.Refresh(hashes)
 		})
+		go cron.Run()
 	}
 
 	if app.config.enableWebhook {
