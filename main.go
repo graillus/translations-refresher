@@ -51,7 +51,7 @@ func main() {
 	}
 
 	app := newApp(config)
-	err = app.Init()
+	err := app.Init()
 	if err != nil {
 		panic(err.Error())
 	}
