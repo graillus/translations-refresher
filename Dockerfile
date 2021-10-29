@@ -1,6 +1,6 @@
 FROM golang:alpine as builder
 
-WORKDIR /go/src/github.com/ETSGlobal/translations-refresher
+WORKDIR /go/src/github.com/graillus/translations-refresher
 
 COPY go.mod .
 COPY go.sum .
@@ -16,6 +16,6 @@ FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates
 
-COPY --from=builder /go/src/github.com/ETSGlobal/translations-refresher/bin/refresher /usr/local/bin
+COPY --from=builder /go/src/github.com/graillus/translations-refresher/bin/refresher /usr/local/bin
 
 ENTRYPOINT ["refresher"]
