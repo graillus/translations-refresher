@@ -44,7 +44,9 @@ helm install translations-refresher deploy/helm \
 ```
 
 5. Install the test deployment
+```bash
 kubectl apply -f test/deployment.yaml
+```
 
 The refresher is now running in the cluster and should have mutated the test deployment.
 ```bash
