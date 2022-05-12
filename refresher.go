@@ -29,7 +29,9 @@ func (r Refresher) Refresh(hashes *Hashes) {
 		deployments := r.repository.FindDeployments(ns)
 		log.Printf("There are %d deployments subscribed to translation refresh in namespace %s\n", len(deployments), ns)
 
-		for _, deploy := range deployments {
+		for idx := range deployments {
+			deploy := &deployments[idx]
+
 			// Apply the translation sync logic
 			handleResource(r.parser, hashes, &deploy.ObjectMeta, &deploy.Spec.Template)
 		}
