@@ -111,6 +111,7 @@ func (app *App) Run() {
 			w.WriteHeader(200)
 		}))
 		mux.Handle("/metrics", http.Handler(promhttp.Handler()))
+		mux.Handle("/api/v1/refresh", http.HandlerFunc(app.ApiHandler))
 
 		fmt.Println("Listening on port 8080")
 		err := http.ListenAndServe(":8080", mux)
